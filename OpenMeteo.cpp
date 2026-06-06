@@ -167,7 +167,6 @@ static void GetData(const Weather::Settings & settings,const char *m_OpenMeteoAP
 	
 	FILE *fh;
 	char buf[500];
-	
 	buf[0]=0;
 	
 	if ((fh = popen(cmd, "r")) != NULL) {
@@ -187,9 +186,14 @@ static void GetData(const Weather::Settings & settings,const char *m_OpenMeteoAP
 	    trace("No response from curl. Response file missing or empty\n");
 	    return;
 	}
-	ifs >> j;
-	ParseResponse(j, ret);
-
+	try { // to parse response as JSON
+    	ifs >> j;
+		ParseResponse(j, ret);
+	} catch (std::exception &err) {
+	    trace("Failed to parse response: %s\n", err.what());
+	    ret->valid = false;
+	}
+	
 	ifs.close();
 	
 	if (!ret->valid) {
